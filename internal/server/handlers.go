@@ -93,6 +93,7 @@ func createKubeconfig(c echo.Context) error {
 
 	kubeCfg, err := ac.ResourceManager.ServiceAccountCreateKubeConfigForUser(ac.Config.Cluster, r.Username, r.Namespace)
 	if err != nil {
+		c.Logger().Errorf("create kubeconfig: %v", err)
 		return fmt.Errorf("create kubeconf: %w", err)
 	}
 
