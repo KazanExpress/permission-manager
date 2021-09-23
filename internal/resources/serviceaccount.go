@@ -35,7 +35,7 @@ func (r *Manager) ServiceAccountCreateKubeConfigForUser(cluster config.ClusterCo
 		if err != nil {
 			return "", fmt.Errorf("service account not created: %w", err)
 		}
-	} else {
+	} else if err != nil {
 		return "", fmt.Errorf("failed to check sa existence: %w", err)
 	}
 
