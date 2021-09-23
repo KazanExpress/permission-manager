@@ -26,11 +26,17 @@ func (r *Manager) ServiceAccountCreate(namespace, name string) (*v1.ServiceAccou
 // ServiceAccountCreateKubeConfigForUser Creates a ServiceAccount for the user and returns the KubeConfig with its token
 func (r *Manager) ServiceAccountCreateKubeConfigForUser(cluster config.ClusterConfig, username, kubeConfigNamespace string) (kubeconfigYAML string, err error) {
 
-	// Create service account
-	_, err = r.ServiceAccountCreate(cluster.Namespace, username)
+	// Create service account if not exists
 
-	if err != nil {
-		return "", fmt.Errorf("service account not created: %w", err)
+	_, err = r.ServiceAccountGet(cluster.Namespace, username)
+
+	if apierrors.IsNotFound(err) {
+		_, err = r.ServiceAccountCreate(cluster.Namespace, username)
+		if err != nil {
+			return "", fmt.Errorf("service account not created: %w", err)
+		}
+	} else {
+		return "", fmt.Errorf("failed to check sa existence: %w", err)
 	}
 
 	// get service account token
