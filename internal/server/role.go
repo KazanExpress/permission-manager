@@ -1,9 +1,10 @@
 package server
 
 import (
+	"sighupio/permission-manager/internal/resources"
+
 	"github.com/labstack/echo"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"sighupio/permission-manager/internal/resources"
 )
 
 func deleteRole(c echo.Context) error {
@@ -73,6 +74,12 @@ func createRoleBinding(c echo.Context) error {
 
 	if err != nil {
 		return err
+	}
+
+	if ac.Config.Cluster.OverrideNamespace {
+		for i := range r.Subjects {
+			r.Subjects[i].Namespace = ac.Config.Cluster.Namespace
+		}
 	}
 
 	_, err = ac.ResourceManager.RoleBindingCreate(r.Namespace, r.Username, resources.RoleBindingRequirements{

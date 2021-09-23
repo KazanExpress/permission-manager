@@ -22,6 +22,12 @@ func createClusterRolebinding(c echo.Context) error {
 		return err
 	}
 
+	if ac.Config.Cluster.OverrideNamespace {
+		for i := range r.Subjects {
+			r.Subjects[i].Namespace = ac.Config.Cluster.Namespace
+		}
+	}
+
 	_, err = ac.ResourceManager.ClusterRoleBindingCreate(r.ClusterRolebindingName, r.Username, r.RoleName, r.Subjects)
 
 	if err != nil {
@@ -30,7 +36,6 @@ func createClusterRolebinding(c echo.Context) error {
 
 	return ac.okResponse()
 }
-
 
 func deleteClusterRolebinding(c echo.Context) error {
 	ac := c.(*AppContext)

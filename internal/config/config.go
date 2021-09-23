@@ -3,12 +3,14 @@ package config
 import (
 	"log"
 	"os"
+	"strings"
 )
 
 type ClusterConfig struct {
 	Name                string
 	ControlPlaneAddress string
 	Namespace           string
+	OverrideNamespace   bool
 	CASource            string
 }
 
@@ -29,6 +31,7 @@ func New() *Config {
 			ControlPlaneAddress: os.Getenv("CONTROL_PLANE_ADDRESS"),
 			Namespace:           os.Getenv("NAMESPACE"),
 			CASource:            os.Getenv("CA_SOURCE"),
+			OverrideNamespace:   strings.ToLower(os.Getenv("OVERRIDE_NAMESPACE")) == "true",
 		},
 		Backend: BackendConfig{
 			Port: os.Getenv("PORT"),
