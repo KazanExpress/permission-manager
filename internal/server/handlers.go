@@ -1,11 +1,12 @@
 package server
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"net/http"
 )
-
 
 func ListNamespaces(c echo.Context) error {
 	ac := c.(*AppContext)
@@ -90,8 +91,10 @@ func createKubeconfig(c echo.Context) error {
 		r.Namespace = "default"
 	}
 
-	kubeCfg := ac.ResourceManager.ServiceAccountCreateKubeConfigForUser(ac.Config.Cluster, r.Username, r.Namespace)
+	kubeCfg, err := ac.ResourceManager.ServiceAccountCreateKubeConfigForUser(ac.Config.Cluster, r.Username, r.Namespace)
+	if err != nil {
+		return fmt.Errorf("create kubeconf: %w", err)
+	}
 
 	return c.JSON(http.StatusOK, Response{Ok: true, Kubeconfig: kubeCfg})
 }
-

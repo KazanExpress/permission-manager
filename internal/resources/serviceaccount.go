@@ -2,15 +2,14 @@ package resources
 
 import (
 	"fmt"
+	"sighupio/permission-manager/internal/config"
+	"time"
+
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"log"
-	"sighupio/permission-manager/internal/config"
-	"time"
 )
-
 
 func (r *Manager) ServiceAccountGet(namespace, name string) (*v1.ServiceAccount, error) {
 	return r.kubeclient.CoreV1().ServiceAccounts(namespace).Get(r.context, name, metav1.GetOptions{})
@@ -25,22 +24,25 @@ func (r *Manager) ServiceAccountCreate(namespace, name string) (*v1.ServiceAccou
 }
 
 // ServiceAccountCreateKubeConfigForUser Creates a ServiceAccount for the user and returns the KubeConfig with its token
-func (r *Manager) ServiceAccountCreateKubeConfigForUser(cluster config.ClusterConfig, username, kubeConfigNamespace string) (kubeconfigYAML string) {
-
-	serviceAccountNamespace := "permission-manager" // TODO: must be received externally to this func?
+func (r *Manager) ServiceAccountCreateKubeConfigForUser(cluster config.ClusterConfig, username, kubeConfigNamespace string) (kubeconfigYAML string, err error) {
 
 	// Create service account
-	_, err := r.ServiceAccountCreate(serviceAccountNamespace, username)
+	_, err = r.ServiceAccountCreate(cluster.Namespace, username)
 
 	if err != nil {
-		log.Printf("Service Account not created: %v", err)
+		return "", fmt.Errorf("service account not created: %w", err)
 	}
 
 	// get service account token
-	_, token, err := r.serviceAccountGetToken(serviceAccountNamespace, username, true)
+	_, token, err := r.serviceAccountGetToken(cluster.Namespace, username, true)
 
 	if err != nil {
-		log.Fatal(err)
+		return "", fmt.Errorf("service account get token: %w", err)
+	}
+
+	caBase64, err := r.getCaBase64(cluster, username)
+	if err != nil {
+		return "", fmt.Errorf("get ca: %w", err)
 	}
 
 	certificateTpl := `---
@@ -66,7 +68,7 @@ users:
 	return fmt.Sprintf(certificateTpl,
 		username,
 		cluster.Name,
-		getCaBase64(),
+		caBase64,
 		cluster.ControlPlaneAddress,
 		cluster.Name,
 		cluster.Name,
@@ -76,10 +78,8 @@ users:
 		cluster.Name,
 		username,
 		token,
-	)
+	), nil
 }
-
-
 
 //todo refactor
 func (r *Manager) serviceAccountGetToken(ns string, name string, shouldWaitServiceAccountCreation bool) (tokenName string, token string, err error) {
@@ -145,6 +145,3 @@ func (r *Manager) serviceAccountGetToken(ns string, name string, shouldWaitServi
 
 	return tokenName, token, nil
 }
-
-
-
