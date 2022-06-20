@@ -13,7 +13,7 @@
     "react-scripts": "3.4.0",
     "react-select": "^3.0.4",
     "react-simple-code-editor": "^0.9.14",
-    "react-spinners": "^0.6.1",
+    "react-spinners": "^0.12.0",
     "tailwindcss": "^1.1.2",
     "uuid": "^3.3.2"
   },
