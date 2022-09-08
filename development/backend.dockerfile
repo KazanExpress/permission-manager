@@ -1,4 +1,4 @@
-FROM golang:1.16
+FROM golang:1.18.6
 
 RUN go get -u github.com/cosmtrek/air
 
