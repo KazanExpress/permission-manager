@@ -1,4 +1,4 @@
-FROM golang:1.16
+FROM golang:1.21.0
 
 RUN apt-get update && apt-get install -y npm=7.5.2+ds-2
 
